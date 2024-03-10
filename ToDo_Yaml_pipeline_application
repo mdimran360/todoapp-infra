@@ -1,0 +1,67 @@
+
+
+trigger: none
+
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage: buildstage
+    displayName: build_stage
+    jobs:
+    - job: buildstage
+      displayName: build_stage_Job
+      pool:
+       vmImage: ubuntu-latest
+      steps:
+      - task: NodeTool@0
+        inputs:
+          versionSource: 'spec'
+          versionSpec: '16.x'
+      - task: CmdLine@2
+        inputs:
+          script: 'npm install'
+      - task: CmdLine@2
+        inputs:
+          script: 'npm run build'
+      - task: PublishBuildArtifacts@1
+        inputs:
+          PathtoPublish: 'build'
+          ArtifactName: 'build-artifact'
+          publishLocation: 'Container'
+        
+  - stage: deploysttage
+    displayName: Deploy_sttage
+    jobs:
+    - job: deploysttage
+      pool:
+       vmImage: ubuntu-latest
+      displayName: Deploy_sttage_Job
+      steps:
+      - task: DownloadBuildArtifacts@1
+        inputs:
+          buildType: 'current'
+          downloadType: 'single'
+          artifactName: 'build-artifact'
+          downloadPath: 'build'
+      - task: CopyFilesOverSSH@0
+        inputs:
+          sshEndpoint: 'imran_FVM_Connection'
+          sourceFolder: 'build'
+          contents: '**'
+          targetFolder: '/tmp/build'
+          readyTimeout: '20000'
+      - task: SSH@0
+        inputs:
+          sshEndpoint: 'imran_FVM_Connection'
+          runOptions: 'commands'
+          commands: 'sudo cp /tmp/build/* -r /var/www/html'
+          readyTimeout: '20000'
+      - task: SSH@0
+        inputs:
+          sshEndpoint: 'imran_FVM_Connection'
+          runOptions: 'commands'
+          commands: 'sudo systemctl restart nginx'
+          readyTimeout: '20000'
+
