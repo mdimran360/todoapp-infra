@@ -1,0 +1,26 @@
+
+trigger: none
+
+
+pool:
+  vmImage: ubuntu-latest
+
+parameters:
+- name: RG_Name
+  displayName: RG Name
+  type: string
+ 
+- name: location_name
+  displayName: Location Name
+  type: string
+  values:
+    - eastus
+    - westus
+
+steps:
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'Imran_azure_dev_connection'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: 'az group delete --name ${{parameters.RG_Name}} --yes'
